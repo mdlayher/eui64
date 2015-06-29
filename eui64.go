@@ -18,7 +18,7 @@ var (
 
 	// ErrInvalidPrefix is returned when an IPv6 address prefix is longer than 64
 	// bits in length.
-	ErrInvalidPrefix = errors.New("Prefix must be an IPv6 address prefix of /64 or less")
+	ErrInvalidPrefix = errors.New("prefix must be an IPv6 address prefix of /64 or less")
 )
 
 // ParseIP parses an input IPv6 address to retrieve its IPv6 address prefix and
