@@ -20,72 +20,68 @@ func TestParseIP(t *testing.T) {
 	}{
 		{
 			desc: "nil IP address",
-			err:  ErrInvalidIP,
+			err:  errInvalidIP,
 		},
 		{
 			desc: "short IP address",
 			ip:   bytes.Repeat([]byte{0}, 15),
-			err:  ErrInvalidIP,
+			err:  errInvalidIP,
 		},
 		{
 			desc: "long IP address",
 			ip:   bytes.Repeat([]byte{0}, 17),
-			err:  ErrInvalidIP,
+			err:  errInvalidIP,
 		},
 		{
 			desc: "IPv4 address",
 			ip:   net.IPv4(192, 168, 1, 1),
-			err:  ErrInvalidIP,
+			err:  errInvalidIP,
 		},
 		{
-			desc:   "IPv6 address 2002:db8::1, EUI-64 MAC",
-			ip:     net.ParseIP("2002:db8::1"),
-			prefix: net.ParseIP("2002:db8::"),
+			desc:   "IPv6 EUI-64 MAC",
+			ip:     net.ParseIP("2001:db8::1"),
+			prefix: net.ParseIP("2001:db8::"),
 			mac:    net.HardwareAddr{0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
 		},
 		{
-			desc:   "IPv6 address fe80::212:7fff:feeb:6b40, EUI-48 MAC",
+			desc:   "IPv6 EUI-48 MAC",
 			ip:     net.ParseIP("fe80::212:7fff:feeb:6b40"),
 			prefix: net.ParseIP("fe80::"),
 			mac:    net.HardwareAddr{0x00, 0x12, 0x7f, 0xeb, 0x6b, 0x40},
 		},
-		{
-			desc:   "IPv6 address fe80::20ac:9eff:fe18:be80, EUI-48 MAC",
-			ip:     net.ParseIP("fe80::20ac:9eff:fe18:be80"),
-			prefix: net.ParseIP("fe80::"),
-			mac:    net.HardwareAddr{0x22, 0xac, 0x9e, 0x18, 0xbe, 0x80},
-		},
 	}
 
-	for i, tt := range tests {
-		// Copy input value to ensure it is not modified later
-		origIP := make(net.IP, len(tt.ip))
-		copy(origIP, tt.ip)
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			// Copy input value to ensure it is not modified later
+			origIP := make(net.IP, len(tt.ip))
+			copy(origIP, tt.ip)
 
-		prefix, mac, err := ParseIP(tt.ip)
-		if err != nil {
-			if want, got := tt.err, err; want != got {
-				t.Fatalf("[%02d] test %q, unexpected error:\n- want: %v\n-  got: %v",
-					i, tt.desc, want, got)
+			prefix, mac, err := ParseIP(tt.ip)
+			if err != nil {
+				if want, got := tt.err, err; want != got {
+					t.Fatalf("unexpected error:\n- want: %v\n-  got: %v",
+						want, got)
+				}
+
+				return
 			}
 
-			continue
-		}
+			// Verify input value was not modified
+			if want, got := origIP, tt.ip; !bytes.Equal(want, got) {
+				t.Fatalf("IP was modified:\n- want: %v\n-  got: %v",
+					want, got)
+			}
 
-		// Verify input value was not modified
-		if want, got := origIP, tt.ip; !bytes.Equal(want, got) {
-			t.Fatalf("[%02d] test %q, IP was modified:\n- want: %v\n-  got: %v",
-				i, tt.desc, want, got)
-		}
-
-		if want, got := tt.prefix, prefix; !bytes.Equal(want, got) {
-			t.Fatalf("[%02d] test %q, unexpected IPv6 prefix:\n- want: %v\n-  got: %v",
-				i, tt.desc, want, got)
-		}
-		if want, got := tt.mac, mac; !bytes.Equal(want, got) {
-			t.Fatalf("[%02d] test %q, unexpected MAC address:\n- want: %v\n-  got: %v",
-				i, tt.desc, want, got)
-		}
+			if want, got := tt.prefix, prefix; !bytes.Equal(want, got) {
+				t.Fatalf("unexpected IPv6 prefix:\n- want: %v\n-  got: %v",
+					want, got)
+			}
+			if want, got := tt.mac, mac; !bytes.Equal(want, got) {
+				t.Fatalf("unexpected MAC address:\n- want: %v\n-  got: %v",
+					want, got)
+			}
+		})
 	}
 }
 
@@ -101,44 +97,44 @@ func TestParseMAC(t *testing.T) {
 	}{
 		{
 			desc: "nil IPv6 prefix",
-			err:  ErrInvalidIP,
+			err:  errInvalidIP,
 		},
 		{
 			desc:   "short IPv6 prefix",
 			prefix: bytes.Repeat([]byte{0}, 15),
-			err:    ErrInvalidIP,
+			err:    errInvalidIP,
 		},
 		{
 			desc:   "long IPv6 prefix",
 			prefix: bytes.Repeat([]byte{0}, 17),
-			err:    ErrInvalidIP,
+			err:    errInvalidIP,
 		},
 		{
 			desc:   "IPv4 prefix",
 			prefix: net.IPv4(192, 168, 1, 1),
-			err:    ErrInvalidIP,
+			err:    errInvalidIP,
 		},
 		{
 			desc:   "IPv6 /128 prefix",
 			prefix: net.ParseIP("fe80::1"),
-			err:    ErrInvalidPrefix,
+			err:    errInvalidPrefix,
 		},
 		{
 			desc:   "nil MAC address",
 			prefix: net.ParseIP("fe80::"),
-			err:    ErrInvalidMAC,
+			err:    errInvalidMAC,
 		},
 		{
 			desc:   "length 5 MAC address",
 			prefix: net.ParseIP("fe80::"),
 			mac:    net.HardwareAddr{0xde, 0xad, 0xbe, 0xef, 0xde},
-			err:    ErrInvalidMAC,
+			err:    errInvalidMAC,
 		},
 		{
 			desc:   "length 9 MAC address",
 			prefix: net.ParseIP("fe80::"),
 			mac:    net.HardwareAddr{0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde},
-			err:    ErrInvalidMAC,
+			err:    errInvalidMAC,
 		},
 		{
 			desc:   "EUI-48 MAC address 02:00:00:00:00:01",

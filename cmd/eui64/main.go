@@ -13,23 +13,20 @@ import (
 )
 
 var (
-	// ipFlag is used to set an IPv6 address or IPv6 prefix to parse
-	ipFlag = flag.String("ip", "fe80::", "IPv6 address or IPv6 prefix to parse")
-
-	// macFlag is used to set a EUI-48 or EUI-64 MAC address to parse
+	ipFlag  = flag.String("ip", "fe80::", "IPv6 address or IPv6 prefix to parse")
 	macFlag = flag.String("mac", "", "EUI-48 or EUI-64 MAC address to parse")
 )
 
 func main() {
 	flag.Parse()
 
-	// IP flag required for both operations
+	// IP flag required for both operations.
 	ip := net.ParseIP(*ipFlag)
 	if ip == nil {
 		log.Fatalf("invalid IP address: %s", *ipFlag)
 	}
 
-	// Attempt to parse prefix and MAC address from an IPv6 address
+	// Attempt to parse prefix and MAC address from an IPv6 address.
 	if *ipFlag != "" && *macFlag == "" {
 		prefix, mac, err := eui64.ParseIP(ip)
 		if err != nil {
@@ -40,7 +37,7 @@ func main() {
 		return
 	}
 
-	// Attempt to parse IPv6 address from IPv6 prefix and MAC address
+	// Attempt to parse IPv6 address from IPv6 prefix and MAC address.
 
 	mac, err := net.ParseMAC(*macFlag)
 	if err != nil {
